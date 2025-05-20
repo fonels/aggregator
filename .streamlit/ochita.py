@@ -45,6 +45,20 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+def show_info(metal, period):
+    currency_col, percent_col = period.columns(2, vertical_alignment='center')
+
+    metric_container_currency = currency_col.container(border=True) #контейнеры с инфой по цене металла
+    metric_container_currency.metric(label='Today price', value=1, delta=-23) #тут надо взять информацию из датасета
+
+    metric_container_percents = percent_col.container(border=True)
+    metric_container_percents.metric(label='Percentage growth', value=10, delta=0.24) #тут тоже
+            
+    day_chart_container = period.container(border=True)
+    day_chart_container.line_chart(pd.DataFrame(np.random.randn(20, 1), columns=["a"]))
+
+
+
 #выбор металла для отображения информации
 metals_container = st.container()
 
@@ -74,52 +88,16 @@ with gold_tab:
 
     #график и инфа в зависимости от выбранного периода
     with day_tab:
-        currency_col, percent_col = day_tab.columns(2, vertical_alignment='center')
-
-        metric_container_currency = currency_col.container(border=True) #контейнеры с инфой по цене металла
-        metric_container_currency.metric(label='Today price', value=1, delta=-23) #тут надо взять информацию из датасета
-
-        metric_container_percents = percent_col.container(border=True)
-        metric_container_percents.metric(label='Percentage growth', value=10, delta=0.24) #тут тоже
-    
-        day_chart_container = day_tab.container(border=True)
-        day_chart_container.line_chart(pd.DataFrame(np.random.randn(20, 1), columns=["a"]))
+        show_info(day_tab)
 
     with week_tab:
-        currency_col, percent_col = week_tab.columns(2, vertical_alignment='center')
-
-        metric_container_currency = currency_col.container(border=True) #контейнеры с инфой по цене металла
-        metric_container_currency.metric(label='Today price', value=2, delta=-23) #тут надо взять информацию из датасета
-
-        metric_container_percents = percent_col.container(border=True)
-        metric_container_percents.metric(label='Percentage growth', value=10, delta=0.24) #тут тоже
-
-        week_chart_container = week_tab.container(border=True)
-        week_chart_container.line_chart(pd.DataFrame(np.random.randn(20, 1), columns=["a"]))
+        show_info(week_tab)
 
     with month_tab:
-        currency_col, percent_col = month_tab.columns(2, vertical_alignment='center')
-
-        metric_container_currency = currency_col.container(border=True) #контейнеры с инфой по цене металла
-        metric_container_currency.metric(label='Today price', value=3, delta=-23) #тут надо взять информацию из датасета
-
-        metric_container_percents = percent_col.container(border=True)
-        metric_container_percents.metric(label='Percentage growth', value=10, delta=0.24) #тут тоже
-
-        month_chart_container = month_tab.container(border=True)
-        month_chart_container.line_chart(pd.DataFrame(np.random.randn(20, 1), columns=["a"]))
+        show_info(month_tab)
 
     with year_tab:
-        currency_col, percent_col = year_tab.columns(2, vertical_alignment='center')
-
-        metric_container_currency = currency_col.container(border=True) #контейнеры с инфой по цене металла
-        metric_container_currency.metric(label='Today price', value=4, delta=-23) #тут надо взять информацию из датасета
-
-        metric_container_percents = percent_col.container(border=True)
-        metric_container_percents.metric(label='Percentage growth', value=10, delta=0.24) #тут тоже
-
-        year_chart_container = year_tab.container(border=True)
-        year_chart_container.line_chart(pd.DataFrame(np.random.randn(20, 1), columns=["a"]))
+        show_info(year_tab)
     
     #доп инфа
     additional_info_container = st.container(border=True)
@@ -143,52 +121,16 @@ with silver_tab:
 
     #график и инфа в зависимости от выбранного периода
     with day_tab:
-        currency_col, percent_col = day_tab.columns(2, vertical_alignment='center')
-
-        metric_container_currency = currency_col.container(border=True) #контейнеры с инфой по цене металла
-        metric_container_currency.metric(label='Today price', value=1234, delta=-23) #тут надо взять информацию из датасета
-
-        metric_container_percents = percent_col.container(border=True)
-        metric_container_percents.metric(label='Percentage growth', value=10, delta=0.24) #тут тоже
-    
-        day_chart_container = day_tab.container(border=True)
-        day_chart_container.line_chart(pd.DataFrame(np.random.randn(20, 1), columns=["a"]))
+        show_info(day_tab)
 
     with week_tab:
-        currency_col, percent_col = week_tab.columns(2, vertical_alignment='center')
-
-        metric_container_currency = currency_col.container(border=True) #контейнеры с инфой по цене металла
-        metric_container_currency.metric(label='Today price', value=1234, delta=-23) #тут надо взять информацию из датасета
-
-        metric_container_percents = percent_col.container(border=True)
-        metric_container_percents.metric(label='Percentage growth', value=10, delta=0.24) #тут тоже
-
-        week_chart_container = week_tab.container(border=True)
-        week_chart_container.line_chart(pd.DataFrame(np.random.randn(20, 1), columns=["a"]))
+        show_info(week_tab)
 
     with month_tab:
-        currency_col, percent_col = month_tab.columns(2, vertical_alignment='center')
-
-        metric_container_currency = currency_col.container(border=True) #контейнеры с инфой по цене металла
-        metric_container_currency.metric(label='Today price', value=1234, delta=-23) #тут надо взять информацию из датасета
-
-        metric_container_percents = percent_col.container(border=True)
-        metric_container_percents.metric(label='Percentage growth', value=10, delta=0.24) #тут тоже
-
-        month_chart_container = month_tab.container(border=True)
-        month_chart_container.line_chart(pd.DataFrame(np.random.randn(20, 1), columns=["a"]))
+        show_info(month_tab)
 
     with year_tab:
-        currency_col, percent_col = year_tab.columns(2, vertical_alignment='center')
-
-        metric_container_currency = currency_col.container(border=True) #контейнеры с инфой по цене металла
-        metric_container_currency.metric(label='Today price', value=1234, delta=-23) #тут надо взять информацию из датасета
-
-        metric_container_percents = percent_col.container(border=True)
-        metric_container_percents.metric(label='Percentage growth', value=10, delta=0.24) #тут тоже
-
-        year_chart_container = year_tab.container(border=True)
-        year_chart_container.line_chart(pd.DataFrame(np.random.randn(20, 1), columns=["a"]))
+        show_info(year_tab)
 
     #доп инфа
     additional_info_container = st.container(border=True)
@@ -212,59 +154,23 @@ with platinum_tab:
 
     #график и инфа в зависимости от выбранного периода
     with day_tab:
-        currency_col, percent_col = day_tab.columns(2, vertical_alignment='center')
-
-        metric_container_currency = currency_col.container(border=True) #контейнеры с инфой по цене металла
-        metric_container_currency.metric(label='Today price', value=1234, delta=-23) #тут надо взять информацию из датасета
-
-        metric_container_percents = percent_col.container(border=True)
-        metric_container_percents.metric(label='Percentage growth', value=10, delta=0.24) #тут тоже
-    
-        day_chart_container = day_tab.container(border=True)
-        day_chart_container.line_chart(pd.DataFrame(np.random.randn(20, 1), columns=["a"]))
+        show_info(day_tab)
 
     with week_tab:
-        currency_col, percent_col = week_tab.columns(2, vertical_alignment='center')
-
-        metric_container_currency = currency_col.container(border=True) #контейнеры с инфой по цене металла
-        metric_container_currency.metric(label='Today price', value=1234, delta=-23) #тут надо взять информацию из датасета
-
-        metric_container_percents = percent_col.container(border=True)
-        metric_container_percents.metric(label='Percentage growth', value=10, delta=0.24) #тут тоже
-
-        week_chart_container = week_tab.container(border=True)
-        week_chart_container.line_chart(pd.DataFrame(np.random.randn(20, 1), columns=["a"]))
+        show_info(week_tab)
 
     with month_tab:
-        currency_col, percent_col = month_tab.columns(2, vertical_alignment='center')
-
-        metric_container_currency = currency_col.container(border=True) #контейнеры с инфой по цене металла
-        metric_container_currency.metric(label='Today price', value=1234, delta=-23) #тут надо взять информацию из датасета
-
-        metric_container_percents = percent_col.container(border=True)
-        metric_container_percents.metric(label='Percentage growth', value=10, delta=0.24) #тут тоже
-
-        month_chart_container = month_tab.container(border=True)
-        month_chart_container.line_chart(pd.DataFrame(np.random.randn(20, 1), columns=["a"]))
+        show_info(month_tab)
 
     with year_tab:
-        currency_col, percent_col = year_tab.columns(2, vertical_alignment='center')
-
-        metric_container_currency = currency_col.container(border=True) #контейнеры с инфой по цене металла
-        metric_container_currency.metric(label='Today price', value=1234, delta=-23) #тут надо взять информацию из датасета
-
-        metric_container_percents = percent_col.container(border=True)
-        metric_container_percents.metric(label='Percentage growth', value=10, delta=0.24) #тут тоже
-
-        year_chart_container = year_tab.container(border=True)
-        year_chart_container.line_chart(pd.DataFrame(np.random.randn(20, 1), columns=["a"]))
+        show_info(year_tab)
 
     #доп инфа
     additional_info_container = st.container(border=True)
     additional_info_text_container = additional_info_container.container(border=True)
     additional_info_text_container.write('blah blah blah blah')
 
-with silver_tab:
+with palladium_tab:
     
     title_container = palladium_tab.container()
     title_container.markdown("# Here is some info about palladium")
@@ -281,52 +187,16 @@ with silver_tab:
 
     #график и инфа в зависимости от выбранного периода
     with day_tab:
-        currency_col, percent_col = day_tab.columns(2, vertical_alignment='center')
-
-        metric_container_currency = currency_col.container(border=True) #контейнеры с инфой по цене металла
-        metric_container_currency.metric(label='Today price', value=1234, delta=-23) #тут надо взять информацию из датасета
-
-        metric_container_percents = percent_col.container(border=True)
-        metric_container_percents.metric(label='Percentage growth', value=10, delta=0.24) #тут тоже
-    
-        day_chart_container = day_tab.container(border=True)
-        day_chart_container.line_chart(pd.DataFrame(np.random.randn(20, 1), columns=["a"]))
+        show_info(day_tab)
 
     with week_tab:
-        currency_col, percent_col = week_tab.columns(2, vertical_alignment='center')
-
-        metric_container_currency = currency_col.container(border=True) #контейнеры с инфой по цене металла
-        metric_container_currency.metric(label='Today price', value=1234, delta=-23) #тут надо взять информацию из датасета
-
-        metric_container_percents = percent_col.container(border=True)
-        metric_container_percents.metric(label='Percentage growth', value=10, delta=0.24) #тут тоже
-
-        week_chart_container = week_tab.container(border=True)
-        week_chart_container.line_chart(pd.DataFrame(np.random.randn(20, 1), columns=["a"]))
+        show_info(week_tab)
 
     with month_tab:
-        currency_col, percent_col = month_tab.columns(2, vertical_alignment='center')
-
-        metric_container_currency = currency_col.container(border=True) #контейнеры с инфой по цене металла
-        metric_container_currency.metric(label='Today price', value=1234, delta=-23) #тут надо взять информацию из датасета
-
-        metric_container_percents = percent_col.container(border=True)
-        metric_container_percents.metric(label='Percentage growth', value=10, delta=0.24) #тут тоже
-
-        month_chart_container = month_tab.container(border=True)
-        month_chart_container.line_chart(pd.DataFrame(np.random.randn(20, 1), columns=["a"]))
+        show_info(month_tab)
 
     with year_tab:
-        currency_col, percent_col = year_tab.columns(2, vertical_alignment='center')
-
-        metric_container_currency = currency_col.container(border=True) #контейнеры с инфой по цене металла
-        metric_container_currency.metric(label='Today price', value=1234, delta=-23) #тут надо взять информацию из датасета
-
-        metric_container_percents = percent_col.container(border=True)
-        metric_container_percents.metric(label='Percentage growth', value=10, delta=0.24) #тут тоже
-
-        year_chart_container = year_tab.container(border=True)
-        year_chart_container.line_chart(pd.DataFrame(np.random.randn(20, 1), columns=["a"]))
+        show_info(year_tab)
 
     #доп инфа
     additional_info_container = st.container(border=True)
