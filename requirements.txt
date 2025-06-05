@@ -21,3 +21,9 @@ urllib3==2.4.0
 yfinance==0.2.54
 trl==0.17.0
 wandb==0.19.11
+torch
+transformers
+peft
+safetensors
+fastapi
+uvicorn
