@@ -6,6 +6,7 @@ import requests
 import os
 import json
 import torch
+import pandas as pd
 
 st.markdown(
     """
@@ -74,6 +75,21 @@ def get_batch_predictions(metal, jsonl_path, num_news):
         else:
             return {"error": response.text}
 
+def get_label_week_ago(metal):
+    # Путь к нужному файлу
+    csv_path = f"../aggregator/dataset/datasets/labeled_dataset/labeled_{metal}_data.csv"
+    df = pd.read_csv(csv_path, sep=";", parse_dates=["timestamp"])
+    df = df.sort_values("timestamp")
+    last_date = df["timestamp"].max()
+    target_date = last_date - pd.Timedelta(days=7)
+    # Ищем ближайшую дату <= target_date
+    df_before = df[df["timestamp"] <= target_date]
+    if not df_before.empty:
+        row = df_before.iloc[-1]
+        return row["label"], row["timestamp"].strftime("%Y-%m-%d")
+    else:
+        return None, None
+
 # ─────────────────── GOLD ───────────────────
 with gold_tab:
     st.container().markdown("# Here is some info about gold")
@@ -83,17 +99,14 @@ with gold_tab:
     show_info("gold", year_tab,  "year")
     additional_info_container = st.container(border=True)
     with additional_info_container:
-        st.markdown("### Our predictions:")
-        jsonl_path = "../aggregator/dataset/datasets/labeled_dataset/json_data_gold.jsonl"
-        num_news = st.number_input("Number of latest news to predict", min_value=1, max_value=100, value=20, key="gold_num_news")
-        if st.button("Predict", key="predict_gold"):
-            with st.spinner("Predicting for gold..."):
-                result = get_batch_predictions("gold", jsonl_path, num_news)
-            if "error" in result:
-                st.error(result["error"])
+        st.markdown("### Our predictions for the next trading week:")
+        if st.button("Make prediciton", key="predict_gold"):
+            with st.spinner("Getting prediction for gold..."):
+                label, label_date = get_label_week_ago("gold")
+            if label is not None:
+                st.success(f"## {label}")
             else:
-                st.write(f"Accuracy: {result['accuracy']:.2%} ({result['correct']}/{result['total']})")
-                st.dataframe([{k: v for k, v in row.items() if k in ["input_text", "true_label", "prediction"]} for row in result["results"]], use_container_width=True)
+                st.error("Нет данных для прогноза!")
 
 # ─────────────────── SILVER ───────────────────
 with silver_tab:
@@ -104,17 +117,14 @@ with silver_tab:
     show_info("silver", year_tab,  "year")
     additional_info_container = st.container(border=True)
     with additional_info_container:
-        st.markdown("### Our predictions:")
-        jsonl_path = "../aggregator/dataset/datasets/labeled_dataset/json_data_silver.jsonl"
-        num_news = st.number_input("Number of latest news to predict", min_value=1, max_value=100, value=20, key="silver_num_news")
-        if st.button("Predict", key="predict_silver"):
-            with st.spinner("Predicting for silver..."):
-                result = get_batch_predictions("silver", jsonl_path, num_news)
-            if "error" in result:
-                st.error(result["error"])
+        st.markdown("### Our predictions for the next trading week:")
+        if st.button("Make prediciton", key="predict_silver"):
+            with st.spinner("Getting prediction for silver..."):
+                label, label_date = get_label_week_ago("silver")
+            if label is not None:
+                st.success(f"## {label}")
             else:
-                st.write(f"Accuracy: {result['accuracy']:.2%} ({result['correct']}/{result['total']})")
-                st.dataframe([{k: v for k, v in row.items() if k in ["input_text", "true_label", "prediction"]} for row in result["results"]], use_container_width=True)
+                st.error("Нет данных для прогноза!")
 
 # ─────────────────── PLATINUM ───────────────────
 with platinum_tab:
@@ -125,17 +135,14 @@ with platinum_tab:
     show_info("platinum", year_tab,  "year")
     additional_info_container = st.container(border=True)
     with additional_info_container:
-        st.markdown("### Our predictions:")
-        jsonl_path = "../aggregator/dataset/datasets/labeled_dataset/json_data_platinum.jsonl"
-        num_news = st.number_input("Number of latest news to predict", min_value=1, max_value=100, value=20, key="platinum_num_news")
-        if st.button("Predict", key="predict_platinum"):
-            with st.spinner("Predicting for platinum..."):
-                result = get_batch_predictions("platinum", jsonl_path, num_news)
-            if "error" in result:
-                st.error(result["error"])
+        st.markdown("### Our predictions for the next trading week:")
+        if st.button("Make prediciton", key="predict_platinum"):
+            with st.spinner("Getting prediction for platinum..."):
+                label, label_date = get_label_week_ago("platinum")
+            if label is not None:
+                st.success(f"{label}")
             else:
-                st.write(f"Accuracy: {result['accuracy']:.2%} ({result['correct']}/{result['total']})")
-                st.dataframe([{k: v for k, v in row.items() if k in ["input_text", "true_label", "prediction"]} for row in result["results"]], use_container_width=True)
+                st.error("Нет данных для прогноза!")
 
 # ─────────────────── PALLADIUM ───────────────────
 with palladium_tab:
@@ -146,14 +153,11 @@ with palladium_tab:
     show_info("palladium", year_tab,  "year")
     additional_info_container = st.container(border=True)
     with additional_info_container:
-        st.markdown("### Our predictions:")
-        jsonl_path = "../aggregator/dataset/datasets/labeled_dataset/json_data_palladium.jsonl"
-        num_news = st.number_input("Number of latest news to predict", min_value=1, max_value=100, value=20, key="palladium_num_news")
-        if st.button("Predict", key="predict_palladium"):
-            with st.spinner("Predicting for palladium..."):
-                result = get_batch_predictions("palladium", jsonl_path, num_news)
-            if "error" in result:
-                st.error(result["error"])
+        st.markdown("### Our predictions for the next trading week:")
+        if st.button("Make prediciton", key="predict_palladium"):
+            with st.spinner("Getting prediction for palladium..."):
+                label, label_date = get_label_week_ago("palladium")
+            if label is not None:
+                st.success(f"## {label}")
             else:
-                st.write(f"Accuracy: {result['accuracy']:.2%} ({result['correct']}/{result['total']})")
-                st.dataframe([{k: v for k, v in row.items() if k in ["input_text", "true_label", "prediction"]} for row in result["results"]], use_container_width=True)
+                st.error("Нет данных для прогноза!")

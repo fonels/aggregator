@@ -1,4 +1,3 @@
-# model_api.py
 from fastapi import FastAPI, Request, UploadFile, File, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
