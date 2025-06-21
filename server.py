@@ -8,6 +8,11 @@ import torch
 import os
 import json
 import io
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from contextlib import contextmanager
+from data_pipeline.config import DB_CONFIG, TABLE_MAPPINGS
+from datetime import datetime, timedelta
 
 # Map metal to model directory
 MODEL_DIRS = {
@@ -40,92 +45,88 @@ def load_model_and_tokenizer(metal):
     loaded_tokenizers[metal] = tokenizer
     return model, tokenizer
 
+@contextmanager
+def get_db_connection():
+    conn = None
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        yield conn
+    finally:
+        if conn:
+            conn.close()
+
 app = FastAPI()
 
-class PredictRequest(BaseModel):
-    metal: str  # 'gold', 'silver', 'platinum', 'palladium'
-    title: str  # news title
+@app.get("/data/{metal}")
+def get_metal_data(metal: str, period: str = 'year'):
+    table_name = f"{metal.lower()}_data"
+    if table_name not in TABLE_MAPPINGS.values():
+        return JSONResponse(status_code=404, content={"error": "Metal not found"})
 
-@app.post('/predict')
-async def predict(request: PredictRequest):
-    metal = request.metal.lower()
-    title = request.title
-    if metal not in MODEL_DIRS:
-        return {"error": f"Unknown metal: {metal}"}
-    model, tokenizer = load_model_and_tokenizer(metal)
-    # Format input as chat template
-    chat_template = [
-        {"role": "user", "content": title},
-        {"role": "assistant", "content": ""}
-    ]
-    prompt = tokenizer.apply_chat_template(chat_template, tokenize=False, add_generation_prompt=True)
-    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-    with torch.no_grad():
-        output = model.generate(**inputs, max_new_tokens=32)
-    decoded = tokenizer.decode(output[0], skip_special_tokens=True)
-    # Extract only the assistant's answer (after the user prompt)
-    answer = decoded.split(title)[-1].strip()
-    return {"prediction": answer}
+    end_date = datetime.now()
+    if period == 'week':
+        start_date = end_date - timedelta(days=7)
+    elif period == 'month':
+        start_date = end_date - timedelta(days=30)
+    elif period == 'year':
+        start_date = end_date - timedelta(days=365)
+    else:
+        return JSONResponse(status_code=400, content={"error": "Invalid period specified"})
 
-# ──────────────── Batch prediction endpoint ────────────────
-@app.post('/batch_predict')
-async def batch_predict(
-    metal: str, 
-    file: UploadFile = File(...), 
-    period: str = Query(None), 
-    max_samples: int = Query(20)
-):
-    metal = metal.lower()
-    if metal not in MODEL_DIRS:
-        return JSONResponse(status_code=400, content={"error": f"Unknown metal: {metal}"})
-    model, tokenizer = load_model_and_tokenizer(metal)
-    # Read JSONL file
-    contents = await file.read()
-    lines = contents.decode('utf-8').splitlines()
-    results = []
-    correct = 0
-    total = 0
-    for line in lines:
-        if not line.strip():
-            continue
-        try:
-            item = json.loads(line)
-            input_text = item.get('input_text', '')
-            true_label = item.get('output_label', '')
-
-            # Filter by period if specified
-            if period and period.lower() not in input_text.lower():
-                continue
-
-            # Only use news titles (extract from input_text)
-            # Example: extract after 'Новости дня:'
-            if 'Новости дня:' in input_text:
-                news_titles = input_text.split('Новости дня:')[-1].strip()
+    query = f"""
+        SELECT timestamp, "Close" as price
+        FROM {table_name}
+        WHERE timestamp >= %s AND timestamp <= %s
+        ORDER BY timestamp;
+    """
+    
+    with get_db_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            # First, check if there is any data for the last year for 'year' period
+            if period == 'year':
+                check_query = f"SELECT MIN(timestamp) as min_date FROM {table_name};"
+                cur.execute(check_query)
+                result = cur.fetchone()
+                if result and result['min_date']:
+                    min_db_date = result['min_date']
+                    one_year_ago = datetime.now() - timedelta(days=365)
+                    if min_db_date > one_year_ago:
+                        # if the earliest data is more recent than one year, fetch all data
+                        query = f"""
+                            SELECT timestamp, "Close" as price
+                            FROM {table_name}
+                            ORDER BY timestamp;
+                        """
+                        cur.execute(query)
+                    else:
+                        cur.execute(query, (start_date, end_date))
+                else: # no data in table
+                     cur.execute(query, (start_date, end_date))
             else:
-                news_titles = input_text
+                cur.execute(query, (start_date, end_date))
 
-            # Format input as chat template
-            chat_template = [
-                {"role": "user", "content": news_titles},
-                {"role": "assistant", "content": ""}
-            ]
-            prompt = tokenizer.apply_chat_template(chat_template, tokenize=False, add_generation_prompt=True)
-            inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-            with torch.no_grad():
-                output = model.generate(**inputs, max_new_tokens=32)
-            decoded = tokenizer.decode(output[0], skip_special_tokens=True)
-            pred = decoded.split(news_titles)[-1].strip()
-            results.append({
-                "input_text": news_titles,
-                "true_label": true_label,
-                "prediction": pred
-            })
-            if pred.lower() == true_label.lower():
-                correct += 1
-            total += 1
-            if total >= max_samples:
-                break
-        except Exception as e:
-            results.append({"error": str(e), "line": line})
-    accuracy = correct / total if total > 0 else 0.0
-    return {"results": results, "accuracy": accuracy, "total": total, "correct": correct}
+            data = cur.fetchall()
+
+    return data
+
+@app.get("/news")
+def get_news():
+    table_name = f"news_data"
+    if table_name not in TABLE_MAPPINGS.values():
+        return JSONResponse(status_code=404, content={"error": "News not found"})
+
+    query = f"""
+        SELECT "headlines" as title
+        FROM news_headlines
+        ORDER BY timestamp DESC LIMIT 1;
+    """
+    
+    with get_db_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(query)
+            data = cur.fetchall()
+    
+    news_titles_list = data[0]['title'].split(' / ')
+    return news_titles_list
+
+#здесь функция, которая отправляет запрос к модели
