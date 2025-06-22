@@ -27,3 +27,7 @@ peft
 safetensors
 fastapi
 uvicorn
+psycopg2
+data_pipeline
+cryptography
+thriftpy
