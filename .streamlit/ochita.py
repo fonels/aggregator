@@ -4,6 +4,7 @@ from streamlit_extras.metric_cards import style_metric_cards
 import requests
 import os
 import pandas as pd
+import re
 
 st.markdown(
     """
@@ -24,14 +25,13 @@ st.markdown(
 )
 
 # ─────────────────── Data ───────────────────
-API_URL = "http://localhost:8000/data"
-NEWS_URL = "http://localhost:8000/news"
+API_URL = "http://localhost:8000"
 
 @st.cache_data(ttl=600) # Cache data for 10 minutes
 def get_data_from_server(metal: str, period: str) -> pd.DataFrame:
     """Fetches data from the FastAPI server and returns a DataFrame."""
     try:
-        response = requests.get(f"{API_URL}/{metal}", params={"period": period}, timeout=30)
+        response = requests.get(f"{API_URL}/data/{metal}", params={"period": period}, timeout=120)
         response.raise_for_status() # Raise an exception for bad status codes
         data = response.json()
         if not data:
@@ -49,7 +49,7 @@ def get_data_from_server(metal: str, period: str) -> pd.DataFrame:
 def get_news_from_server() -> pd.DataFrame:
     """Fetches news from the FastAPI server and returns a DataFrame."""
     try:
-        response = requests.get(f"{NEWS_URL}", timeout=30)
+        response = requests.get(f"{API_URL}/news", timeout=120)
         response.raise_for_status() # Raise an exception for bad status codes
         data = response.json()
         return data
@@ -78,6 +78,37 @@ def show_info(metal: str, period_tab, period_key: str):
 
     period_tab.line_chart(series_df.rename(columns={'price': 'Price'}))
 
+def show_prediction(metal: str):
+    response = requests.get(f"{API_URL}/data/{metal}/today")
+    if not response.ok:
+        st.error(f"Could not fetch today's data for {metal}: {response.text}")
+        return
+    data = response.json()
+    if not data:
+        st.error(f"No data received for {metal} today.")
+        return
+    json_payload = {
+        "date": str(data["timestamp"]),
+        "open_price": data["Open"],
+        "high_price": data["High"],
+        "low_price": data["Low"],
+        "close_price": data["Close"],
+        "volume": data["Volume"],
+        "news": news_titles
+    }
+    prediction_response = requests.post(f"{API_URL}/predict/{metal}", json=json_payload, timeout=1200)
+    if prediction_response.ok:
+        result = prediction_response.json()
+        if result["label"] == "Buy":
+            st.success(f"Label: {result['label']} Justification: {result['justification']}")
+        elif result["label"] == "Sell":
+            st.error(f"Label: {result['label']} Justification: {result['justification']}")
+        else:
+            st.warning(f"Label: Hold {result['justification']}")
+    else:
+        st.error(f"Prediction request failed: {prediction_response.text}")
+
+st.logo("https://s3.iimg.su/s/22/MUe570VTIueNZLzVeIk6tivbi3CqVMNc22JD3OqO.png")
 # ─────────────────── UI as before ───────────────────
 metals_container = st.container()
 gold_tab, silver_tab, platinum_tab, palladium_tab = metals_container.tabs(
@@ -114,7 +145,7 @@ with gold_tab:
         st.markdown("### Our predictions for the next trading week:")
         if st.button("Make prediction", key="predict_gold"):
             with st.spinner("Getting prediction for gold..."):
-                st.success("Prediction for gold is here")
+                show_prediction("gold")
 
 # ─────────────────── SILVER ───────────────────
 with silver_tab:
@@ -128,7 +159,7 @@ with silver_tab:
         st.markdown("### Our predictions for the next trading week:")
         if st.button("Make prediction", key="predict_silver"):
             with st.spinner("Getting prediction for silver..."):
-                st.success("Prediction for silver is here")
+                show_prediction("silver")
 # ─────────────────── PLATINUM ───────────────────
 with platinum_tab:
     st.container().markdown("# Here is some info about platinum")
@@ -141,7 +172,7 @@ with platinum_tab:
         st.markdown("### Our predictions for the next trading week:")
         if st.button("Make prediction", key="predict_platinum"):
             with st.spinner("Getting prediction for platinum..."):
-                st.success("Prediction for platinum is here")
+                show_prediction("platinum")
 
 # ─────────────────── PALLADIUM ───────────────────
 with palladium_tab:
@@ -155,6 +186,7 @@ with palladium_tab:
         st.markdown("### Our predictions for the next trading week:")
         if st.button("Make prediction", key="predict_palladium"):
             with st.spinner("Getting prediction for palladium..."):
-                st.success("Prediction for palladium is here")
+                show_prediction("palladium")
 
 
+st.caption("Disclaimer: The information presented on this site is intended solely for informational purposes and does not constitute financial, investment, or other professional advice. Before making investment decisions, it is recommended to consult with a qualified specialist.")
