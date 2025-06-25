@@ -33,9 +33,15 @@ def load_model_and_tokenizer(metal):
     with open(os.path.join(model_dir, 'adapter_config.json'), 'r', encoding='utf-8') as f:
         config = json.load(f)
     base_model_name = config['base_model_name_or_path']
+<<<<<<< HEAD
+    tokenizer = AutoTokenizer.from_pretrained(base_model_name)
+    base_model = AutoModelForCausalLM.from_pretrained(base_model_name)
+    model = PeftModel.from_pretrained(base_model, model_dir)
+=======
     tokenizer = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
     base_model = AutoModelForCausalLM.from_pretrained(base_model_name, trust_remote_code=True)
     model = PeftModel.from_pretrained(base_model, model_dir, adapter_name=None)
+>>>>>>> 2cec43221abcf35600a8c5a30910ccae5d9ca3f6
     model.eval()
     loaded_models[metal] = model
     loaded_tokenizers[metal] = tokenizer
@@ -82,6 +88,16 @@ def format_prompt_enhanced(input_text, tokenizer):
     example_3_output = "Метка: Hold\\nОбоснование: Отсутствие явных экономических или геополитических триггеров и стабильные показатели OHLCV указывают на отсутствие причин для изменения текущей позиции. Рынок находится в состоянии неопределенности."
 
     system_prompt = (
+<<<<<<< HEAD
+        "Ты опытный финансовый аналитик, специализирующийся на рынке золота. Твоя задача — проанализировать предоставленные данные по цене золота (OHLC) и новостям дня, а затем принять обоснованное инвестиционное решение: Buy (Покупка), Hold (Удержание) или Sell (Продажа).\\n\\n"
+        "Твой анализ должен содержать:\\n"
+        "1.  **Оценку ценовых движений:** Проанализируй Open, High, Low, Close. Есть ли признаки тренда, консолидации или разворота? Игнорируй объём.\\n"
+        "2.  **Анализ релевантности новостей:** Учитывай только те события, что влияют на драгоценные металлы: монетарная политика, инфляция, геополитика, макроэкономика. Игнорируй корпоративные и незначимые новости, если они не затрагивают глобальные настроения.\\n"
+        "3.  **Обоснование решения:** Объясни выбор (2–4 предложения), ссылаясь на конкретные технические или фундаментальные сигналы.\\n\\n"
+        "Если данных недостаточно или рынок неопределён, обоснуй 'Hold' и укажи, какие сигналы нужны для изменения позиции. Но не злоупотребляй HOLD, если есть основания для Buy или Sell.\\n\\n"
+        "Представь ответ в СТРОГОМ формате:\\nМетка: [Hold/Buy/Sell]\\nОбоснование: [Твоё подробное объяснение]"
+        )
+=======
         "Ты опытный финансовый аналитик, специализирующийся на рынке золота. Твоя задача — проанализировать "
         "предоставленные данные по цене золота (OHLCV) и новостям дня, а затем принять обоснованное инвестиционное решение: "
         "Buy (Покупка), Hold (Удержание) или Sell (Продажа).\\n\\n"
@@ -98,6 +114,7 @@ def format_prompt_enhanced(input_text, tokenizer):
         "почему 'Hold' является наиболее разумной стратегией, и чего ты ожидаешь для изменения этого решения. Но старайся не злоупотреблять HOLD, если есть возможность, лучше использовать другие метки.\\n\\n"
         "Представь ответ в СТРОГОМ формате:\\nМетка: [Hold/Buy/Sell]\\nОбоснование: [Твоё подробное объяснение]"
     )
+>>>>>>> 2cec43221abcf35600a8c5a30910ccae5d9ca3f6
 
     messages = [
         {"role": "system", "content": system_prompt},
@@ -115,10 +132,17 @@ def extract_label_and_justification_improved(generated_text):
     label = "UNKNOWN"
     justification = "Не удалось извлечь обоснование."
 
+<<<<<<< HEAD
+    generated_text = re.sub(r"^(.*?)(Метка:|Рекомендация:|Buy|Sell|Hold)", r"\2", generated_text,
+                            flags=re.DOTALL | re.IGNORECASE)
+
+    label_pattern = r"(?:Метка:|Рекомендация:|Decision:|Label:)\s*(buy|sell|hold)"
+=======
     generated_text = re.sub(r"^(.*?)(Метка:|Рекомендация:|Buy|Sell|Hold)", r"\\2", generated_text,
                             flags=re.DOTALL | re.IGNORECASE)
 
     label_pattern = r"(?:Метка:|Рекомендация:|Decision:|Label:)\\s*(buy|sell|hold)"
+>>>>>>> 2cec43221abcf35600a8c5a30910ccae5d9ca3f6
     label_match = re.search(label_pattern, generated_text, re.IGNORECASE)
 
     if label_match:
@@ -138,7 +162,11 @@ def extract_label_and_justification_improved(generated_text):
 
     if label != "UNKNOWN":
         after_label = generated_text[start_idx:]
+<<<<<<< HEAD
+        justification_end = re.search(r"(Buy|Sell|Hold|---|\[|$)", after_label, re.IGNORECASE)
+=======
         justification_end = re.search(r"(Buy|Sell|Hold|---|\\[|$)", after_label, re.IGNORECASE)
+>>>>>>> 2cec43221abcf35600a8c5a30910ccae5d9ca3f6
         if justification_end:
             justification = after_label[:justification_end.start()].strip()
         else:
@@ -146,7 +174,11 @@ def extract_label_and_justification_improved(generated_text):
     else:
         justification = generated_text.strip()
 
+<<<<<<< HEAD
+    justification = re.sub(r"^(Обоснование:|Justification:)\s*", "", justification, flags=re.IGNORECASE).strip()
+=======
     justification = re.sub(r"^(Обоснование:|Justification:)\\s*", "", justification, flags=re.IGNORECASE).strip()
+>>>>>>> 2cec43221abcf35600a8c5a30910ccae5d9ca3f6
     return label, justification
 
 
@@ -209,7 +241,7 @@ def get_news():
 
     query = f"""
         SELECT "headlines" as title
-        FROM news_headlines
+        FROM news_data
         ORDER BY timestamp DESC LIMIT 1;
     """
 
@@ -222,6 +254,28 @@ def get_news():
     return news_titles_list
 
 
+<<<<<<< HEAD
+@app.get("/data/{metal}/today")
+def get_metal_data_today(metal: str):
+    table_name = f"{metal.lower()}_data"
+    if table_name not in TABLE_MAPPINGS.values():
+        return JSONResponse(status_code=404, content={"error": "Metal not found"})
+
+    query = f"""
+        SELECT timestamp, "Open", "High", "Low", "Close", "Volume"
+        FROM {table_name}
+        WHERE timestamp = (SELECT MAX(timestamp) FROM {table_name});
+    """
+    with get_db_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(query)
+            data = cur.fetchone()
+
+    return data
+
+
+=======
+>>>>>>> 2cec43221abcf35600a8c5a30910ccae5d9ca3f6
 @app.post("/predict/{metal}", response_model=PredictionResponse)
 async def predict(metal: str, request: PredictionRequest):
     if metal.lower() not in MODEL_DIRS:
@@ -246,13 +300,22 @@ async def predict(metal: str, request: PredictionRequest):
 
     prompt = format_prompt_enhanced(input_text, tokenizer)
 
+<<<<<<< HEAD
+    print("PROMPT:\n", prompt)
+
+=======
+>>>>>>> 2cec43221abcf35600a8c5a30910ccae5d9ca3f6
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model.to(device)
     inputs = tokenizer(prompt, return_tensors="pt", truncation=True,
                        max_length=model.config.max_position_embeddings).to(device)
 
     generation_config = GenerationConfig(
+<<<<<<< HEAD
+        max_new_tokens=750,
+=======
         max_new_tokens=400,
+>>>>>>> 2cec43221abcf35600a8c5a30910ccae5d9ca3f6
         do_sample=False,
         num_beams=1,
         pad_token_id=tokenizer.pad_token_id,
@@ -273,4 +336,15 @@ async def predict(metal: str, request: PredictionRequest):
 
     predicted_label, justification = extract_label_and_justification_improved(predicted_text)
 
+<<<<<<< HEAD
+    # Очистка памяти
+    del inputs, output_ids, generated_tokens_ids
+    import gc
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
     return PredictionResponse(label=predicted_label, justification=justification)
+=======
+    return PredictionResponse(label=predicted_label, justification=justification)
+>>>>>>> 2cec43221abcf35600a8c5a30910ccae5d9ca3f6
